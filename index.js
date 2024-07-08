@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const dotenv = require("dotenv");
 const cors = require("cors");
-
+const path = require("path");
 const PORT = process.env.PORT || 3000;
 const connectDB = require("./config/db");
 const { verifyToken } = require("./middeleware/auth-middeleware");
@@ -30,6 +30,11 @@ async function main() {
   app.use("/api/auth", authRoutes);
   app.use("/api/tasks", verifyToken, tasksRoutes);
   app.use("/api/loggedInUser", verifyToken, userRoutes);
+
+  // Catch-all route
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "public", "index.html"));
+  });
 
   app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
