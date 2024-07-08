@@ -2,13 +2,12 @@ const Task = require("../models/task-model");
 const User = require("../models/user-model");
 
 async function getUserTasks(req, res) {
-  const { userId } = req.userId;
+  const { userId } = req;
 
   try {
     const tasks = await Task.find({
       user: userId,
     });
-
     res.status(200).json(tasks);
   } catch (err) {
     if (err.name === "CastError") {
@@ -25,55 +24,53 @@ async function getUserTasks(req, res) {
   }
 }
 
-
 async function getTaskById(req, res) {
-    const { id } = req.params;
-    try {
-      const task = await Task.findById(id);
-      res.status(200).json(task);
-    } catch (err) {
-      if (err.name === "CastError") {
-        console.log(
-          `tasks-controller, getTaskById. Task not found with id: ${id}`
-        );
-        return res.status(404).json({ message: "Task not found" });
-      }
+  const { id } = req.params;
+  try {
+    const task = await Task.findById(id);
+    res.status(200).json(task);
+  } catch (err) {
+    if (err.name === "CastError") {
       console.log(
-        `tasks-controller, getTaskById. Error while getting Task with id: ${id}`,
-        err.name
+        `tasks-controller, getTaskById. Task not found with id: ${id}`
       );
-      res.status(500).json({ message: err.message });
+      return res.status(404).json({ message: "Task not found" });
     }
+    console.log(
+      `tasks-controller, getTaskById. Error while getting Task with id: ${id}`,
+      err.name
+    );
+    res.status(500).json({ message: err.message });
   }
+}
 
+async function deleteTaskById(req, res) {
+  const { id } = req.params;
 
-  async function deleteTaskById(req, res) {
-    const { id } = req.params;
+  try {
+    const deletedTask = await Task.findOneAndDelete({
+      _id: id,
+      user: req.userId,
+    });
 
-    try {
-      const deletedTask = await Task.findOneAndDelete({
-        _id: id,
-        user: req.userId,
-      });
-
-      if (!deletedTask) {
-        console.log(
-          `tasks-controller, deleteTask. Task not found with id: ${id}`
-        );
-        return res.status(404).json({ message: "Task not found" });
-      }
-      // Update the user's task array
-      await User.findByIdAndUpdate(req.userId, {
-        $pull: { tasks: id }, // Remove the task id from the user's products array
-      });
-      res.json({ message: "Task deleted" });
-    } catch (err) {
+    if (!deletedTask) {
       console.log(
-        `tasks-controller, deleteTask. Error while deleting task with id: ${id}`
+        `tasks-controller, deleteTask. Task not found with id: ${id}`
       );
-      res.status(500).json({ message: err.message });
+      return res.status(404).json({ message: "Task not found" });
     }
+    // Update the user's task array
+    await User.findByIdAndUpdate(req.userId, {
+      $pull: { tasks: id }, // Remove the task id from the user's products array
+    });
+    res.json({ message: "Task deleted" });
+  } catch (err) {
+    console.log(
+      `tasks-controller, deleteTask. Error while deleting task with id: ${id}`
+    );
+    res.status(500).json({ message: err.message });
   }
+}
 
 // Update Product
 async function updateTask(req, res) {
@@ -144,4 +141,10 @@ async function createTask(req, res) {
   }
 }
 
-module.exports = { getUserTasks, deleteTaskById, updateTask, createTask,getTaskById };
+module.exports = {
+  getUserTasks,
+  deleteTaskById,
+  updateTask,
+  createTask,
+  getTaskById,
+};

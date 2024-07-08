@@ -8,7 +8,6 @@ function verifyToken(req, res, next) {
   const authHeader =
     req.headers["Authorization"] || req.headers["authorization"]; // Get the authorization header
   const token = authHeader && authHeader.split(" ")[1]; // Get the token from the header
-  console.log("authHeader" ,authHeader);
   if (!token) {
     console.log("auth.middleware, verifyToken. No token provided");
     return res.status(401).json({ error: "Access denied" });
@@ -16,6 +15,7 @@ function verifyToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET); // Verify token
+    console.log(decoded);
     req.userId = decoded.userId; // Add userId to request object
     next(); // Call next middleware
   } catch (error) {
